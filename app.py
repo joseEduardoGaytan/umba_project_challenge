@@ -92,8 +92,29 @@ def request_device_readings_max(device_uuid, device_type, start, end):
     * start -> The epoch start time for a sensor being created
     * end -> The epoch end time for a sensor being created
     """
+    try:
+        # Set the db that we want and open the connection
+        if app.config['TESTING']:
+            conn = sqlite3.connect('test_database.db')
+        else:
+            conn = sqlite3.connect('database.db')
+        conn.row_factory = sqlite3.Row
+        cur = conn.cursor()
 
-    return 'Endpoint is not implemented', 501
+        # Check for dates parameters
+        start_date, end_date = getDefaultDatesParams(start, end)
+
+        # Append optional parameters
+        selectQuery = 'select MAX(value) from readings where device_uuid=?1 AND type=?2 AND date_created BETWEEN ?3 AND ?4'
+        # Execute the query
+        cur.execute(selectQuery, [device_uuid, device_type, start_date, end_date])        
+        max = cur.fetchone()[0]
+
+        # Return the JSON
+        return jsonify({'value': max}), 200
+    except:
+        return 'An unexpected error happened', 500
+
 
 @app.route('/devices/<string:device_uuid>/<string:device_type>/readings/median/', methods = ['GET'], defaults={'start':None, 'end':None})
 @app.route('/devices/<string:device_uuid>/<string:device_type>/<string:start>/readings/median/', methods = ['GET'], defaults={'end':None})
