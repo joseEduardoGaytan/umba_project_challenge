@@ -3,9 +3,11 @@ from flask.json import jsonify
 from marshmallow import ValidationError
 from utils.validation_utils import DeviceReadingsSchema
 from utils.dates_parameters import getDefaultDatesParams
+from pandas import DataFrame
 import json
 import sqlite3
 import time
+import sys, traceback
 
 app = Flask(__name__)
 
@@ -130,8 +132,36 @@ def request_device_readings_median(device_uuid, device_type, start, end):
     * start -> The epoch start time for a sensor being created
     * end -> The epoch end time for a sensor being created
     """
+    try:
+        # Set the db that we want and open the connection
+        if app.config['TESTING']:
+            conn = sqlite3.connect('test_database.db')
+        else:
+            conn = sqlite3.connect('database.db')
+        conn.row_factory = sqlite3.Row
+        cur = conn.cursor()
 
-    return 'Endpoint is not implemented', 501
+        # Check for dates parameters
+        start_date, end_date = getDefaultDatesParams(start, end)
+
+        # Append optional parameters
+        selectQuery = 'select value from readings where device_uuid=?1 AND type=?2 AND date_created BETWEEN ?3 AND ?4'
+        # Execute the query
+        cur.execute(selectQuery, [device_uuid, device_type, start_date, end_date])        
+        values = cur.fetchall()
+
+        #Calculate the median
+        dataFrame = DataFrame(values)
+        median_series = dataFrame.median()
+        median = median_series[0]
+
+        print(median)
+
+        # Return the JSON
+        return jsonify({'value': median}), 200
+    except:
+        print(traceback.format_exc())
+        return 'An unexpected error happened', 500
 
 @app.route('/devices/<string:device_uuid>/readings/mean/', methods = ['GET'])
 def request_device_readings_mean(device_uuid):
