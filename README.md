@@ -1,6 +1,7 @@
 # Umba Backend Homework Assignment
 
 ## Introduction
+
 Imagine a system where hundreds of thousands of hardware devices are concurrently uploading temperature and humidity sensor data.
 
 The API to facilitate this system accepts creation of sensor records, in addition to retrieval.
@@ -66,20 +67,24 @@ Finally, the API supports a summary endpoint for all devices and readings. When 
 The API is backed by a SQLite database.
 
 ## Getting Started
+
 This service requires Python3. To get started, create a virtual environment using Python3.
 
 Then, install the requirements using `pip install -r requirements.txt`.
+If windows please use: `pip install -r requirements_windows.txt`.
 
 Finally, run the API via `python app.py`.
 
 ## Testing
+
 Tests can be run via `pytest -v`.
 
 ## Tasks
+
 Your task is to fork this repo and complete the following:
 
-- [ ] Add field validation. Only *temperature* and *humidity* sensors are allowed with values between *0* and *100*.
-- [ ] Add logic for query parameters for *type* and *start/end* dates.
+- [ ] Add field validation. Only _temperature_ and _humidity_ sensors are allowed with values between _0_ and _100_.
+- [ ] Add logic for query parameters for _type_ and _start/end_ dates.
 - [ ] Implementation
   - [ ] The max, median and mean endpoints.
   - [ ] The quartiles endpoint with start/end parameters
