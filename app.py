@@ -1,25 +1,25 @@
 from flask import Flask, render_template, request, Response
 from flask.json import jsonify
-from marshmallow import Schema, fields, ValidationError, validate
+from marshmallow import ValidationError
+from utils.validation_utils import DeviceReadingsSchema
+from utils.dates_parameters import getDefaultDatesParams
 import json
 import sqlite3
 import time
 
 app = Flask(__name__)
 
-sensor_types = ['temperature', 'humidity']
-
-class DeviceReadingsSchema(Schema):
-    type = fields.Str(required=True, validate=[validate.OneOf(sensor_types)])
-    value = fields.Int(required=True, validate=[validate.Range(min=0, max=100)])
-
 # Setup the SQLite DB
 conn = sqlite3.connect('database.db')
 conn.execute('CREATE TABLE IF NOT EXISTS readings (device_uuid TEXT, type TEXT, value INTEGER, date_created INTEGER)')
 conn.close()
 
-@app.route('/devices/<string:device_uuid>/readings/', methods = ['POST', 'GET'])
-def request_device_readings(device_uuid):
+# Optional parameters
+@app.route('/devices/<string:device_uuid>/readings/', methods = ['POST', 'GET'], defaults={'device_type':None, 'start':None, 'end':None})
+@app.route('/devices/<string:device_uuid>/<string:device_type>/readings/', methods = ['POST', 'GET'], defaults={'start':None, 'end':None})
+@app.route('/devices/<string:device_uuid>/<string:device_type>/<string:start>/readings/', methods = ['POST', 'GET'], defaults={'end':None})
+@app.route('/devices/<string:device_uuid>/<string:device_type>/<string:start>/<string:end>/readings/', methods = ['POST', 'GET'])
+def request_device_readings(device_uuid, device_type, start, end):
     """
     This endpoint allows clients to POST or GET data specific sensor types.
 
@@ -66,15 +66,22 @@ def request_device_readings(device_uuid):
         # Return success
         return 'success', 201
     else:
+        # Check for dates parameters
+        start_date, end_date = getDefaultDatesParams(start, end)
+        
+        # Append optional parameters
+        selectQuery = 'select * from readings where device_uuid=?1 AND (?2 IS NULL OR type=?2) AND date_created BETWEEN ?3 AND ?4'
         # Execute the query
-        cur.execute('select * from readings where device_uuid="{}"'.format(device_uuid))
+        cur.execute(selectQuery, [device_uuid, device_type, start_date, end_date])        
         rows = cur.fetchall()
 
         # Return the JSON
         return jsonify([dict(zip(['device_uuid', 'type', 'value', 'date_created'], row)) for row in rows]), 200
 
-@app.route('/devices/<string:device_uuid>/readings/max/', methods = ['GET'])
-def request_device_readings_max(device_uuid):
+@app.route('/devices/<string:device_uuid>/<string:device_type>/readings/max/', methods = ['GET'], defaults={'start':None, 'end':None})
+@app.route('/devices/<string:device_uuid>/<string:device_type>/<string:start>/readings/max/', methods = ['GET'], defaults={'end':None})
+@app.route('/devices/<string:device_uuid>/<string:device_type>/<string:start>/<string:end>/readings/max/', methods = ['GET'])
+def request_device_readings_max(device_uuid, device_type, start, end):
     """
     This endpoint allows clients to GET the max sensor reading for a device.
 
@@ -88,8 +95,10 @@ def request_device_readings_max(device_uuid):
 
     return 'Endpoint is not implemented', 501
 
-@app.route('/devices/<string:device_uuid>/readings/median/', methods = ['GET'])
-def request_device_readings_median(device_uuid):
+@app.route('/devices/<string:device_uuid>/<string:device_type>/readings/median/', methods = ['GET'], defaults={'start':None, 'end':None})
+@app.route('/devices/<string:device_uuid>/<string:device_type>/<string:start>/readings/median/', methods = ['GET'], defaults={'end':None})
+@app.route('/devices/<string:device_uuid>/<string:device_type>/<string:start>/<string:end>/readings/median/', methods = ['GET'])
+def request_device_readings_median(device_uuid, device_type, start, end):
     """
     This endpoint allows clients to GET the median sensor reading for a device.
 

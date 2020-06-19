@@ -84,7 +84,7 @@ Tests can be run via `pytest -v`.
 Your task is to fork this repo and complete the following:
 
 - [x] Add field validation. Only _temperature_ and _humidity_ sensors are allowed with values between _0_ and _100_.
-- [ ] Add logic for query parameters for _type_ and _start/end_ dates.
+- [x] Add logic for query parameters for _type_ and _start/end_ dates.
 - [ ] Implementation
   - [ ] The max, median and mean endpoints.
   - [ ] The quartiles endpoint with start/end parameters
