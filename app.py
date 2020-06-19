@@ -1,10 +1,17 @@
 from flask import Flask, render_template, request, Response
 from flask.json import jsonify
+from marshmallow import Schema, fields, ValidationError, validate
 import json
 import sqlite3
 import time
 
 app = Flask(__name__)
+
+sensor_types = ['temperature', 'humidity']
+
+class DeviceReadingsSchema(Schema):
+    type = fields.Str(required=True, validate=[validate.OneOf(sensor_types)])
+    value = fields.Int(required=True, validate=[validate.Range(min=0, max=100)])
 
 # Setup the SQLite DB
 conn = sqlite3.connect('database.db')
@@ -39,6 +46,13 @@ def request_device_readings(device_uuid):
     if request.method == 'POST':
         # Grab the post parameters
         post_data = json.loads(request.data)
+
+        # Validate parameters
+        try:
+            DeviceReadingsSchema().load(post_data)
+        except ValidationError as error:
+            return error.messages, 400
+
         sensor_type = post_data.get('type')
         value = post_data.get('value')
         date_created = post_data.get('date_created', int(time.time()))
@@ -118,19 +132,19 @@ def request_device_readings_quartiles(device_uuid):
 
     return 'Endpoint is not implemented', 501
 
-@app.route('<fill-this-in>', methods = ['GET'])
-def request_readings_summary():
-    """
-    This endpoint allows clients to GET a full summary
-    of all sensor data in the database per device.
+# @app.route('<fill-this-in>', methods = ['GET'])
+# def request_readings_summary():
+#     """
+#     This endpoint allows clients to GET a full summary
+#     of all sensor data in the database per device.
 
-    Optional Query Parameters
-    * type -> The type of sensor value a client is looking for
-    * start -> The epoch start time for a sensor being created
-    * end -> The epoch end time for a sensor being created
-    """
+#     Optional Query Parameters
+#     * type -> The type of sensor value a client is looking for
+#     * start -> The epoch start time for a sensor being created
+#     * end -> The epoch end time for a sensor being created
+#     """
 
-    return 'Endpoint is not implemented', 501
+#     return 'Endpoint is not implemented', 501
 
 if __name__ == '__main__':
     app.run()
