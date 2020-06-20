@@ -3,6 +3,7 @@ from flask.json import jsonify
 from marshmallow import ValidationError
 from utils.validation_utils import DeviceReadingsSchema
 from utils.dates_parameters import getDefaultDatesParams
+from utils.summary_list_utils import sort_summary_by_key
 from pandas import DataFrame
 import json
 import sqlite3
@@ -288,13 +289,13 @@ def request_readings_summary(device_type, start, end):
         values = cur.fetchall()
 
         # Add columns so we can compute for every single device
-        dataFrame = DataFrame(values, columns=['device_uuid', 'value'])
-        data_grouped = dataFrame.groupby('device_uuid')        
+        data_frame = DataFrame(values, columns=['device_uuid', 'value'])
+        data_grouped = data_frame.groupby('device_uuid')        
                 
         summary = []
         for group in data_grouped:
             device_uuid = group[0]
-            device_data = dataFrame.loc[dataFrame['device_uuid'] == device_uuid].describe()
+            device_data = data_frame.loc[data_frame['device_uuid'] == device_uuid].describe()
             summary.append({
                 'device_uuid':device_uuid,
                 'number_of_readings': device_data.loc['count'].value,
@@ -304,8 +305,10 @@ def request_readings_summary(device_type, start, end):
                 'quartile_1_value': device_data.loc['25%'].value,
                 'quartile_3_value': device_data.loc['75%'].value
             })
+
+        sorted_summary = sort_summary_by_key(summary, 'number_of_readings', True)
          
-        return jsonify(summary), 200
+        return jsonify(sorted_summary), 200
 
     except:
         print(traceback.format_exc())
