@@ -90,12 +90,32 @@ Your task is to fork this repo and complete the following:
   - [x] The quartiles endpoint with start/end parameters
   - [x] Add the path for the summary endpoint
   - [x] Complete the logic for the summary endpoint
-- [ ] Tests
+- [x] Tests
   - [x] Wrap up the stubbed out unit tests with your changes
   - [x] Add tests for the new summary endpoint
   - [x] Add unit tests for any missing error cases
-- [ ] README
-  - [ ] Explain any design decisions you made and why.
-  - [ ] Imagine you're building the roadmap for this project over the next quarter. What features or updates would you suggest that we prioritize?
+- [x] README
+  - [x] Explain any design decisions you made and why.
+  - [x] Imagine you're building the roadmap for this project over the next quarter. What features or updates would you suggest that we prioritize?
 
 When you're finished, send your git repo link to engineering@umba.com. If you have any questions, please do not hesitate to reach out!
+
+## Excercise Rational and decisions
+
+### Decision
+
+Since I haven't so much experience in Flask, I opted to go for optional route parameters described and explained from different sources.
+
+For the statistical operations, I decided to use Pandas library, since it has already the functions and implementations needed, is a natural candidate and personally I think is best suited to tackle the current challenge.
+
+And finally I decided to centralize some of the code inside an utils folder, In this way it will be simple to reuse and manage code in the project.
+
+### Suggestions and TODOs
+
+The first thing would be try to use a class to attend the APIs endpoints, so we may use mixins, this in order to reuse several code, validators and place default values.
+
+Also implement the min and mode endpoints, since those were contempled by the test but not as part of the challenge.
+
+Therefore, I think it would be a better/smarter way to refactor the optional parameters in flask.
+
+And finally foster and improve the tests. The tests are the natural documentation of the code, it explains in a formal language (unambigous) what the application must to do.
