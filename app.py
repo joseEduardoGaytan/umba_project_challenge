@@ -295,12 +295,13 @@ def request_readings_summary(device_type, start, end):
         summary = []
         for group in data_grouped:
             device_uuid = group[0]
-            device_data = data_frame.loc[data_frame['device_uuid'] == device_uuid].describe()
+            device_data_frame = data_frame.loc[data_frame['device_uuid'] == device_uuid]
+            device_data = device_data_frame.describe()
             summary.append({
                 'device_uuid':device_uuid,
                 'number_of_readings': device_data.loc['count'].value,
                 'max_reading_value': device_data.loc['max'].value,
-                'median_reading_value': 0,
+                'median_reading_value': device_data_frame.median()[0],
                 'mean_reading_value': device_data.loc['mean'].value,
                 'quartile_1_value': device_data.loc['25%'].value,
                 'quartile_3_value': device_data.loc['75%'].value
