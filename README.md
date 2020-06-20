@@ -93,7 +93,7 @@ Your task is to fork this repo and complete the following:
 - [ ] Tests
   - [x] Wrap up the stubbed out unit tests with your changes
   - [x] Add tests for the new summary endpoint
-  - [ ] Add unit tests for any missing error cases
+  - [x] Add unit tests for any missing error cases
 - [ ] README
   - [ ] Explain any design decisions you made and why.
   - [ ] Imagine you're building the roadmap for this project over the next quarter. What features or updates would you suggest that we prioritize?

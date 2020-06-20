@@ -315,5 +315,47 @@ class SensorRoutesTestCases(unittest.TestCase):
 
         # then we check other device
         self.assertDictEqual(result[1], expected_other_device)
+
+    def test_device_readings_outside_dates_range(self):
+        """
+        This test should be implemented. The goal is to test empty list
+        because is outside the dates range
+        """
+        # Test for a past date to a certain point int the future -- a dates range
+        request = self.client().get('/devices/{}/{}/{}/{}/readings/'.format(self.device_uuid, 'temperature', self.current_time + 100, self.current_time + 200))
+        # Then we should receive a 200
+        self.assertEqual(request.status_code, 200)
+        # And the response temperature data should have 0 sensor readings for the given timestamp
+        self.assertTrue(len(json.loads(request.data)) == 0)    
+
+    def test_device_readings_post_invalid_type(self):
+        """
+        This test should be implemented. The goal is to test empty list
+        because is outside the dates range
+        """
+        # Given a device UUID
+        # When we make a request with the given UUID to create a reading
+        request = self.client().post('/devices/{}/readings/'.format(self.device_uuid), data=
+            json.dumps({
+                'type': 'invalid_type',
+                'value': 100 
+            }))
+
+        # Then we should receive a 400 bad request
+        self.assertEqual(request.status_code, 400)
+
+        # Then let's check for the validation error
+        result = json.loads(request.data)
+
+        expected_response = {
+            "type": [
+                "Must be one of: temperature, humidity."
+            ]
+        }
+
+        self.assertDictEqual(expected_response, result)
+
+
+
         
         
