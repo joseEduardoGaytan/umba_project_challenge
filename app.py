@@ -255,19 +255,62 @@ def request_device_readings_quartiles(device_uuid, device_type, start, end):
 
     return 'Endpoint is not implemented', 501
 
-# @app.route('<fill-this-in>', methods = ['GET'])
-# def request_readings_summary():
-#     """
-#     This endpoint allows clients to GET a full summary
-#     of all sensor data in the database per device.
+@app.route('/devices/readings/summary/', methods = ['GET'], defaults={'device_type':None, 'start':None, 'end':None})
+@app.route('/devices/<string:device_type>/readings/summary/', methods = ['GET'], defaults={'start':None, 'end':None})
+@app.route('/devices/<string:device_type>/<string:start>/readings/summary/', methods = ['GET'], defaults={'end':None})
+@app.route('/devices/<string:device_type>/<string:start>/<string:end>/readings/summary/', methods = ['GET'])
+def request_readings_summary(device_type, start, end):
+    """
+    This endpoint allows clients to GET a full summary
+    of all sensor data in the database per device.
 
-#     Optional Query Parameters
-#     * type -> The type of sensor value a client is looking for
-#     * start -> The epoch start time for a sensor being created
-#     * end -> The epoch end time for a sensor being created
-#     """
+    Optional Query Parameters
+    * type -> The type of sensor value a client is looking for
+    * start -> The epoch start time for a sensor being created
+    * end -> The epoch end time for a sensor being created
+    """
+    try:
+        # Set the db that we want and open the connection
+        if app.config['TESTING']:
+            conn = sqlite3.connect('test_database.db')
+        else:
+            conn = sqlite3.connect('database.db')
+        conn.row_factory = sqlite3.Row
+        cur = conn.cursor()
 
-#     return 'Endpoint is not implemented', 501
+        # Check for dates parameters
+        start_date, end_date = getDefaultDatesParams(start, end)
+
+        # Append optional parameters
+        selectQuery = 'select device_uuid, value from readings where (?1 IS NULL OR type=?1) AND date_created BETWEEN ?2 AND ?3'
+        # Execute the query
+        cur.execute(selectQuery, [device_type, start_date, end_date])        
+        values = cur.fetchall()
+
+        # Add columns so we can compute for every single device
+        dataFrame = DataFrame(values, columns=['device_uuid', 'value'])
+        data_grouped = dataFrame.groupby('device_uuid')        
+                
+        summary = []
+        for group in data_grouped:
+            device_uuid = group[0]
+            device_data = dataFrame.loc[dataFrame['device_uuid'] == device_uuid].describe()
+            summary.append({
+                'device_uuid':device_uuid,
+                'number_of_readings': device_data.loc['count'].value,
+                'max_reading_value': device_data.loc['max'].value,
+                'median_reading_value': 0,
+                'mean_reading_value': device_data.loc['mean'].value,
+                'quartile_1_value': device_data.loc['25%'].value,
+                'quartile_3_value': device_data.loc['75%'].value
+            })
+         
+        return jsonify(summary), 200
+
+    except:
+        print(traceback.format_exc())
+        return 'An unexpected error happened', 500
+    
 
 if __name__ == '__main__':
     app.run()
