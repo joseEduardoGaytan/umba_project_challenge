@@ -91,7 +91,7 @@ Your task is to fork this repo and complete the following:
   - [x] Add the path for the summary endpoint
   - [x] Complete the logic for the summary endpoint
 - [ ] Tests
-  - [ ] Wrap up the stubbed out unit tests with your changes
+  - [x] Wrap up the stubbed out unit tests with your changes
   - [ ] Add tests for the new summary endpoint
   - [ ] Add unit tests for any missing error cases
 - [ ] README

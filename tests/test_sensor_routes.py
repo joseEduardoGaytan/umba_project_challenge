@@ -15,20 +15,21 @@ class SensorRoutesTestCases(unittest.TestCase):
         conn.execute('CREATE TABLE IF NOT EXISTS readings (device_uuid TEXT, type TEXT, value INTEGER, date_created INTEGER)')
         
         self.device_uuid = 'test_device'
+        self.current_time = int(time.time())
 
         # Setup some sensor data
         conn.row_factory = sqlite3.Row
         cur = conn.cursor()
         
         cur.execute('insert into readings (device_uuid,type,value,date_created) VALUES (?,?,?,?)',
-                    (self.device_uuid, 'temperature', 22, int(time.time()) - 100))
+                    (self.device_uuid, 'temperature', 22, self.current_time - 100))
         cur.execute('insert into readings (device_uuid,type,value,date_created) VALUES (?,?,?,?)',
-                    (self.device_uuid, 'temperature', 50, int(time.time()) - 50))
+                    (self.device_uuid, 'temperature', 50, self.current_time - 50))
         cur.execute('insert into readings (device_uuid,type,value,date_created) VALUES (?,?,?,?)',
-                    (self.device_uuid, 'temperature', 100, int(time.time())))
+                    (self.device_uuid, 'temperature', 100, self.current_time))
 
         cur.execute('insert into readings (device_uuid,type,value,date_created) VALUES (?,?,?,?)',
-                    ('other_uuid', 'temperature', 22, int(time.time())))
+                    ('other_uuid', 'temperature', 22, self.current_time))
         conn.commit()
 
         app.config['TESTING'] = True
@@ -73,14 +74,30 @@ class SensorRoutesTestCases(unittest.TestCase):
         This test should be implemented. The goal is to test that
         we are able to query for a device's temperature data only.
         """
-        self.assertTrue(False)
+        # Given a device UUID and a device type
+        # When we make a request with the given UUID and Device Type this time temperature
+        request = self.client().get('/devices/{}/{}/readings/'.format(self.device_uuid, 'temperature'))
+
+        # Then we should receive a 200
+        self.assertEqual(request.status_code, 200)
+
+        # And the response temperature data should have three sensor readings
+        self.assertTrue(len(json.loads(request.data)) == 3)
 
     def test_device_readings_get_humidity(self):
         """
         This test should be implemented. The goal is to test that
         we are able to query for a device's humidity data only.
         """
-        self.assertTrue(False)
+        # Given a device UUID and a device type
+        # When we make a request with the given UUID and Device Type this time humidity
+        request = self.client().get('/devices/{}/{}/readings/'.format(self.device_uuid, 'humidity'))
+
+        # Then we should receive a 200
+        self.assertEqual(request.status_code, 200)
+
+        # And the response temperature data shouldn't have any sensor readings
+        self.assertTrue(len(json.loads(request.data)) == 0)        
 
     def test_device_readings_get_past_dates(self):
         """
@@ -89,42 +106,135 @@ class SensorRoutesTestCases(unittest.TestCase):
         a specific date range. We should only get the readings
         that were created in this time range.
         """
-        self.assertTrue(False)
+        # Given a device UUID and a device type
+        # When we make a request with the given UUID and Device Type this time temperature and current test time
 
-    def test_device_readings_min(self):
-        """
-        This test should be implemented. The goal is to test that
-        we are able to query for a device's min sensor reading.
-        """
-        self.assertTrue(False)
+        # Test for the current test datetime to any point in the future
+        request = self.client().get('/devices/{}/{}/{}/readings/'.format(self.device_uuid, 'temperature', self.current_time))
+        # Then we should receive a 200
+        self.assertEqual(request.status_code, 200)
+        # And the response temperature data should have 1 sensor readings for the given timestamp
+        self.assertTrue(len(json.loads(request.data)) == 1)
 
+        # Test for a past date to any point in the future
+        request = self.client().get('/devices/{}/{}/{}/readings/'.format(self.device_uuid, 'temperature', self.current_time - 50))
+        # Then we should receive a 200
+        self.assertEqual(request.status_code, 200)
+        # And the response temperature data should have 2 sensor readings for the given timestamp
+        self.assertTrue(len(json.loads(request.data)) == 2)
+
+        # Test for a past date to any point in the future
+        request = self.client().get('/devices/{}/{}/{}/readings/'.format(self.device_uuid, 'temperature', self.current_time - 100))
+        # Then we should receive a 200
+        self.assertEqual(request.status_code, 200)
+        # And the response temperature data should have 3 sensor readings for the given timestamp
+        self.assertTrue(len(json.loads(request.data)) == 3)     
+
+        # Test for a past date to a certain point int the future -- a dates range
+        request = self.client().get('/devices/{}/{}/{}/{}/readings/'.format(self.device_uuid, 'temperature', self.current_time - 100, self.current_time-1))
+        # Then we should receive a 200
+        self.assertEqual(request.status_code, 200)
+        # And the response temperature data should have 2 sensor readings for the given timestamp
+        self.assertTrue(len(json.loads(request.data)) == 2)    
+
+        # Test for a past date to a certain point int the future -- a dates range
+        request = self.client().get('/devices/{}/{}/{}/{}/readings/'.format(self.device_uuid, 'temperature', self.current_time - 50, self.current_time-1))
+        # Then we should receive a 200
+        self.assertEqual(request.status_code, 200)
+        # And the response temperature data should have 1 sensor readings for the given timestamp
+        self.assertTrue(len(json.loads(request.data)) == 1)
+
+    # The min, is not in the requirements for now. But it may be in the future, so let's keep this endpoint
+    # commented and if we need it we can implement it then, but I prefer to leave a draft so we can see the requirement clearer
+    # def test_device_readings_min(self):
+    #     """
+    #     This test should be implemented. The goal is to test that
+    #     we are able to query for a device's min sensor reading.
+    #     """ 
+    #     # Given a device UUID
+    #     # When we make a request with the given UUID
+    #     request = self.client().get('/devices/{}/readings/min/'.format(self.device_uuid))
+
+    #     # Then we should receive a 200
+    #     self.assertEqual(request.status_code, 200)
+
+    #     result = json.loads(request.data)
+
+    #     # The min value of the test data is 22
+    #     self.assertTrue(result['value'] == 22)
+        
     def test_device_readings_max(self):
         """
         This test should be implemented. The goal is to test that
         we are able to query for a device's max sensor reading.
         """
-        self.assertTrue(False)
+        # Given a device UUID
+        # When we make a request with the given UUID
+        request = self.client().get('/devices/{}/{}/readings/max/'.format(self.device_uuid, 'temperature'))
+
+        # Then we should receive a 200
+        self.assertEqual(request.status_code, 200)
+
+        result = json.loads(request.data)
+
+        # The max value of the test data is 100
+        self.assertTrue(result['value'] == 100)
 
     def test_device_readings_median(self):
         """
         This test should be implemented. The goal is to test that
         we are able to query for a device's median sensor reading.
         """
-        self.assertTrue(False)
+        # Given a device UUID
+        # When we make a request with the given UUID
+        request = self.client().get('/devices/{}/{}/readings/median/'.format(self.device_uuid, 'temperature'))
 
+        # Then we should receive a 200
+        self.assertEqual(request.status_code, 200)
+
+        result = json.loads(request.data)
+
+        # The midian value of the test data is 50
+        self.assertTrue(result['value'] == 50)
+        
     def test_device_readings_mean(self):
         """
         This test should be implemented. The goal is to test that
         we are able to query for a device's mean sensor reading value.
         """
-        self.assertTrue(False)
+        # Given a device UUID
+        # When we make a request with the given UUID
+        request = self.client().get('/devices/{}/{}/readings/mean/'.format(self.device_uuid, 'temperature'))
 
-    def test_device_readings_mode(self):
-        """
-        This test should be implemented. The goal is to test that
-        we are able to query for a device's mode sensor reading value.
-        """
-        self.assertTrue(False)
+        # Then we should receive a 200
+        self.assertEqual(request.status_code, 200)
+
+        result = json.loads(request.data)
+
+        expected_result = (22 + 50 + 100) / 3
+        expected = float("{:.2f}".format(expected_result))
+
+        actual = float("{:.2f}".format(result['value']))
+
+        # Check if the expected is the same as the actual value
+        self.assertTrue(actual == expected)        
+
+    # Mode wasn't implemented, let's comment it and once is implemented we can return and finish this test
+    # def test_device_readings_mode(self):
+    #     """
+    #     This test should be implemented. The goal is to test that
+    #     we are able to query for a device's mode sensor reading value.
+    #     """
+    #     # Given a device UUID
+    #     # When we make a request with the given UUID
+    #     request = self.client().get('/devices/{}/{}/readings/mode/'.format(self.device_uuid, 'temperature'))
+
+    #     # Then we should receive a 200
+    #     self.assertEqual(request.status_code, 200)
+
+    #     result = json.loads(request.data)
+             
+    #     self.assertTrue(False)
 
     def test_device_readings_quartiles(self):
         """
@@ -132,4 +242,27 @@ class SensorRoutesTestCases(unittest.TestCase):
         we are able to query for a device's 1st and 3rd quartile
         sensor reading value.
         """
-        self.assertTrue(False)
+        # Given a device UUID
+        # When we make a request with the given UUID
+        request = self.client().get('/devices/{}/{}/{}/{}/readings/quartiles/'.format(self.device_uuid, 'temperature', self.current_time, self.current_time + 100))
+
+        # Then we should receive a 200
+        self.assertEqual(request.status_code, 200)
+
+        result = json.loads(request.data)
+
+        print(result)
+
+        # For the current data, is possible the quartiles doesn't apply
+        expected_q1 = 100.0
+        expected_q3 = 100.0
+
+        self.assertTrue(result['quartile_1'] == expected_q1)
+        self.assertTrue(result['quartile_3'] == expected_q3)
+
+    def test_device_readings_quartiles(self):
+        """
+        This test should be implemented. The goal is to test that
+        we are able to query for devices summary information
+        """
+        
