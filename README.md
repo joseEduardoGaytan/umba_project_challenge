@@ -92,7 +92,7 @@ Your task is to fork this repo and complete the following:
   - [x] Complete the logic for the summary endpoint
 - [ ] Tests
   - [x] Wrap up the stubbed out unit tests with your changes
-  - [ ] Add tests for the new summary endpoint
+  - [x] Add tests for the new summary endpoint
   - [ ] Add unit tests for any missing error cases
 - [ ] README
   - [ ] Explain any design decisions you made and why.

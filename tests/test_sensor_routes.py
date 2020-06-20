@@ -260,9 +260,60 @@ class SensorRoutesTestCases(unittest.TestCase):
         self.assertTrue(result['quartile_1'] == expected_q1)
         self.assertTrue(result['quartile_3'] == expected_q3)
 
-    def test_device_readings_quartiles(self):
+    def test_device_readings_summary(self):
         """
         This test should be implemented. The goal is to test that
         we are able to query for devices summary information
         """
+        # Given a device UUID
+        # When we make a request with the given UUID
+        request = self.client().get('/devices/readings/summary/')
+
+        # Then we should receive a 200
+        self.assertEqual(request.status_code, 200)
+
+        result = json.loads(request.data)
+
+        # Check the lenght, should be 2 because we have two different devices
+        self.assertTrue(len(result) == 2)
+
+        # Expected summary data
+        min_value_1 = 22.0
+        median_value_1 = 50.0
+        max_value_1 = 100.0
+        device_num_1 = 3.0
+        expected_mean_result_1 = (min_value_1 + median_value_1 + max_value_1) / device_num_1        
+        expected_test_device = {
+            "device_uuid": self.device_uuid,
+            "max_reading_value": max_value_1,
+            "mean_reading_value": expected_mean_result_1,
+            "median_reading_value": median_value_1,
+            "number_of_readings": device_num_1,
+            "quartile_1_value": 36.0, # not enough data
+            "quartile_3_value": 75.0, # not enought data
+        }
+
+        min_value_2 = 22.0
+        median_value_2 = 22.0
+        max_value_2 = 22.0
+        device_num_2 = 1.0
+        expected_mean_result_2 = (min_value_2) / device_num_2
+        expected_mean_2 = float("{:.2f}".format(expected_mean_result_2))
+        expected_other_device = {
+            "device_uuid": 'other_uuid',
+            "max_reading_value": max_value_2,
+            "mean_reading_value": expected_mean_2,
+            "median_reading_value": median_value_2,
+            "number_of_readings": device_num_2,
+            "quartile_1_value": max_value_2, # not enough data
+            "quartile_3_value": max_value_2, # not enought data
+        }
+
+        # Test the sort order of number of readings, the greater would be the test device number of readings
+        # so the first item is the information of test device
+        self.assertDictEqual(result[0], expected_test_device)
+
+        # then we check other device
+        self.assertDictEqual(result[1], expected_other_device)
+        
         
