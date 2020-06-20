@@ -156,15 +156,11 @@ def request_device_readings_median(device_uuid, device_type, start, end):
         median_series = dataFrame.median()
         median = median_series[0]
 
-        print(median)
-
         # Return the JSON
         return jsonify({'value': median}), 200
     except:
-        print(traceback.format_exc())
         return 'An unexpected error happened', 500
 
-# @app.route('/devices/<string:device_uuid>/readings/mean/', methods = ['GET'])
 @app.route('/devices/<string:device_uuid>/<string:device_type>/readings/mean/', methods = ['GET'], defaults={'start':None, 'end':None})
 @app.route('/devices/<string:device_uuid>/<string:device_type>/<string:start>/readings/mean/', methods = ['GET'], defaults={'end':None})
 @app.route('/devices/<string:device_uuid>/<string:device_type>/<string:start>/<string:end>/readings/mean/', methods = ['GET'])
@@ -202,17 +198,13 @@ def request_device_readings_mean(device_uuid, device_type, start, end):
         mean_series = dataFrame.mean()
         mean = mean_series[0]
 
-        print(mean)
-
         # Return the JSON
         return jsonify({'value': mean}), 200
 
     except:
-        print(traceback.format_exc())
         return 'An unexpected error happened', 500
 
 
-# @app.route('/devices/<string:device_uuid>/readings/quartiles/', methods = ['GET'])
 @app.route('/devices/<string:device_uuid>/<string:device_type>/<string:start>/<string:end>/readings/quartiles/', methods = ['GET'])
 def request_device_readings_quartiles(device_uuid, device_type, start, end):
     """
@@ -251,7 +243,6 @@ def request_device_readings_quartiles(device_uuid, device_type, start, end):
         return jsonify(response), 200
 
     except:
-        print(traceback.format_exc())
         return 'An unexpected error happened', 500
 
     return 'Endpoint is not implemented', 501
@@ -312,7 +303,6 @@ def request_readings_summary(device_type, start, end):
         return jsonify(sorted_summary), 200
 
     except:
-        print(traceback.format_exc())
         return 'An unexpected error happened', 500
     
 

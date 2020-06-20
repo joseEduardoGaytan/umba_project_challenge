@@ -251,8 +251,6 @@ class SensorRoutesTestCases(unittest.TestCase):
 
         result = json.loads(request.data)
 
-        print(result)
-
         # For the current data, is possible the quartiles doesn't apply
         expected_q1 = 100.0
         expected_q3 = 100.0
